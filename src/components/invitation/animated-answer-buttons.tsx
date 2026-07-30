@@ -64,12 +64,6 @@ export function AnimatedAnswerButtons({
           layout={!reduce}
           disabled={disabled}
           onClick={() => onYes(noClicks)}
-          animate={reduce ? undefined : { scale: [1, 1.02, 1] }}
-          transition={
-            reduce
-              ? undefined
-              : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
-          }
           className={cn(
             "flex w-full items-center justify-center rounded-lg bg-primary px-6 font-bold text-primary-foreground shadow-md transition-colors",
             "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
