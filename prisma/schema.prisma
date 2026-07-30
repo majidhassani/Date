@@ -1,0 +1,163 @@
+// Prisma schema for «دعوت نیلو» — a private, respectful invitation app.
+// All timestamps are stored in UTC. Local Tehran values are derived at render time.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum InvitationStatus {
+  PENDING // created, awaiting a response
+  RESPONDED // Nilou has answered (accepted or declined)
+  CONFIRMED // Majid confirmed a final plan
+  COMPLETED // the date happened / archived
+  CANCELLED
+}
+
+enum ResponseAnswer {
+  ACCEPTED
+  DECLINED
+}
+
+enum ActivityType {
+  COFFEE_CHAT
+  WALK_AND_COFFEE
+  SPORTS
+  BREAKFAST
+  GALLERY
+  SURPRISE
+  CUSTOM
+}
+
+enum NotificationChannel {
+  TELEGRAM
+  EMAIL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model Invitation {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  inviteeName String
+  ownerName   String
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  responses Response[]
+
+  @@index([status])
+}
+
+model Response {
+  id           String     @id @default(cuid())
+  invitationId String
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  answer         ResponseAnswer
+  activityType   ActivityType?
+  customActivity String?
+  note           String?
+  noClickCount   Int            @default(0)
+
+  // Idempotency key: prevents duplicate submissions from creating duplicate rows.
+  idempotencyKey String @unique
+
+  // Secure edit token stored as a SHA-256 hash. The raw token is only ever
+  // handed to Nilou via her one-time success URL; we never persist it.
+  secureEditTokenHash String?
+
+  // Phone number: stored only with explicit consent, encrypted with AES-256-GCM.
+  // We keep the last 4 digits (for masked display) and the consent timestamp.
+  inviteePhoneEncrypted String?
+  inviteePhoneLast4     String?
+  phoneConsentAt        DateTime?
+
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  availabilityChoices  AvailabilityChoice[]
+  notificationAttempts NotificationAttempt[]
+  finalPlan            FinalPlan?
+
+  @@index([invitationId])
+  @@index([answer])
+  @@index([submittedAt])
+}
+
+model AvailabilityChoice {
+  id         String   @id @default(cuid())
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  rank        Int // 1 = first choice, 2 = second, 3 = third
+  localDate   String // Gregorian local date in Tehran, "YYYY-MM-DD" (Jalali derived at render)
+  localTime   String // "HH:mm", e.g. "18:00"
+  timezone    String   @default("Asia/Tehran")
+  datetimeUtc DateTime // canonical instant
+  createdAt   DateTime @default(now())
+
+  @@unique([responseId, rank])
+  @@index([responseId])
+}
+
+model NotificationAttempt {
+  id         String   @id @default(cuid())
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  channel      NotificationChannel
+  status       NotificationStatus  @default(PENDING)
+  attemptCount Int                 @default(0)
+  errorMessage String? // sanitized; never contains phone numbers or secrets
+  sentAt       DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([responseId])
+  @@index([status])
+}
+
+model FinalPlan {
+  id         String   @id @default(cuid())
+  responseId String   @unique
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  activity         String
+  finalDatetimeUtc DateTime
+  timezone         String   @default("Asia/Tehran")
+  locationNote     String?
+  confirmedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id              String   @id @default(cuid())
+  adminIdentifier String // e.g. admin email (never a password)
+  action          String // e.g. "PHONE_REVEAL", "PHONE_DELETE", "NOTIFY_RETRY"
+  entityType      String?
+  entityId        String?
+  metadata        Json? // redacted; never stores decrypted phone or secrets
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}

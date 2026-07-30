@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens — centralized CSS variables.
+ * Palette: graphite, warm off-white, muted emerald (primary), warm coral (accent).
+ * All colors are expressed as HSL channels so Tailwind can compose opacity.
+ */
+@layer base {
+  :root {
+    /* Surfaces & text */
+    --background: 40 24% 97%;
+    --foreground: 220 16% 16%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 40 24% 99%;
+
+    /* Brand */
+    --primary: 162 43% 32%;
+    --primary-foreground: 150 30% 98%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 220 18% 22%;
+    --accent: 8 78% 61%;
+    --accent-foreground: 12 40% 99%;
+
+    /* Neutrals */
+    --muted: 40 16% 93%;
+    --muted-foreground: 220 9% 42%;
+
+    /* Semantic */
+    --success: 150 52% 36%;
+    --success-foreground: 150 30% 98%;
+    --destructive: 4 68% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Lines & focus */
+    --border: 40 12% 87%;
+    --input: 40 12% 87%;
+    --focus-ring: 162 46% 38%;
+
+    /* Radii */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.625rem;
+    --radius-lg: 0.875rem;
+    --radius-xl: 1.25rem;
+
+    /* Elevation */
+    --shadow-sm: 0 1px 2px 0 hsl(220 20% 20% / 0.06);
+    --shadow-md:
+      0 4px 12px -2px hsl(220 20% 20% / 0.08), 0 2px 6px -2px hsl(220 20% 20% / 0.05);
+    --shadow-lg:
+      0 16px 40px -12px hsl(220 25% 18% / 0.18),
+      0 6px 16px -8px hsl(220 25% 18% / 0.1);
+  }
+
+  .dark {
+    --background: 220 20% 9%;
+    --foreground: 40 22% 94%;
+    --surface: 220 18% 12%;
+    --surface-elevated: 220 16% 15%;
+
+    --primary: 158 48% 46%;
+    --primary-foreground: 160 40% 7%;
+    --secondary: 220 12% 20%;
+    --secondary-foreground: 40 20% 92%;
+    --accent: 8 76% 64%;
+    --accent-foreground: 12 45% 8%;
+
+    --muted: 220 13% 17%;
+    --muted-foreground: 220 10% 65%;
+
+    --success: 150 48% 48%;
+    --success-foreground: 160 40% 7%;
+    --destructive: 2 62% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 12% 22%;
+    --input: 220 12% 24%;
+    --focus-ring: 158 52% 52%;
+
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md:
+      0 4px 14px -2px hsl(0 0% 0% / 0.5), 0 2px 6px -2px hsl(0 0% 0% / 0.4);
+    --shadow-lg:
+      0 20px 48px -12px hsl(0 0% 0% / 0.6), 0 8px 20px -8px hsl(0 0% 0% / 0.45);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01" on;
+    /* Persian digits everywhere text is rendered as numbers */
+    font-variant-numeric: normal;
+  }
+
+  /* Visible, accessible focus ring for keyboard users */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Larger, comfortable tap targets on interactive controls */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-bold tracking-tight;
+    line-height: 1.3;
+  }
+}
+
+@layer utilities {
+  /* Subtle mesh gradient used sparingly for depth on hero surfaces */
+  .mesh-hero {
+    background-image:
+      radial-gradient(
+        60% 55% at 15% 8%,
+        hsl(var(--primary) / 0.14) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        55% 55% at 92% 12%,
+        hsl(var(--accent) / 0.12) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        70% 60% at 50% 110%,
+        hsl(var(--primary) / 0.08) 0%,
+        transparent 60%
+      );
+  }
+
+  .tnum {
+    font-feature-settings: "ss01" on;
+  }
+
+  /* Screen-reader-only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Respect user's reduced-motion preference globally */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Custom scrollbar for a premium feel (non-essential, degrades gracefully) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.55);
+  background-clip: content-box;
+}
