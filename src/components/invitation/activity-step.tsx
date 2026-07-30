@@ -61,6 +61,8 @@ export function ActivityStep({
               type="radio"
               name="activity"
               value={a.id}
+              aria-label={a.title}
+              data-testid={`activity-${a.id}`}
               checked={activityType === a.id}
               onChange={() => onChange({ activityType: a.id })}
               className="peer sr-only"

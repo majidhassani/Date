@@ -10,12 +10,12 @@ async function start(page: Page) {
 }
 
 async function pickActivityAndTime(page: Page) {
-  // Activity — click the card label (wraps the accessible radio)
-  await page.locator('label:has-text("پیاده‌روی و قهوه")').click();
+  // Activity — check the accessible radio directly (deterministic)
+  await page.getByTestId("activity-WALK_AND_COFFEE").check({ force: true });
   await page.getByRole("button", { name: "ادامه" }).click();
 
   // Date + time
-  await page.locator('label:has-text("فردا")').first().click();
+  await page.getByTestId("date-quick-0").check({ force: true });
   await page.getByRole("button", { name: "۱۸:۰۰" }).click();
   await page.getByRole("button", { name: "افزودن به انتخاب‌ها" }).click();
   await page.getByRole("button", { name: "ادامه" }).click();
