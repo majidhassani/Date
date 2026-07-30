@@ -4,19 +4,18 @@ import AxeBuilder from "@axe-core/playwright";
 const SLUG = "e2e-nilou";
 const OWNER_DISPLAY = "۰۹۱۲ ۹۲۸ ۴۴۰۲";
 
-async function startAndAccept(page: Page) {
+async function start(page: Page) {
   await page.goto(`/invite/${SLUG}`);
   await page.getByRole("button", { name: "شروع کنیم" }).click();
-  await page.getByRole("button", { name: /چرا که نه/ }).click();
 }
 
 async function pickActivityAndTime(page: Page) {
-  // Activity
-  await page.getByText("پیاده‌روی و قهوه").click();
+  // Activity — click the card label (wraps the accessible radio)
+  await page.locator('label:has-text("پیاده‌روی و قهوه")').click();
   await page.getByRole("button", { name: "ادامه" }).click();
 
   // Date + time
-  await page.getByText("فردا", { exact: true }).click();
+  await page.locator('label:has-text("فردا")').first().click();
   await page.getByRole("button", { name: "۱۸:۰۰" }).click();
   await page.getByRole("button", { name: "افزودن به انتخاب‌ها" }).click();
   await page.getByRole("button", { name: "ادامه" }).click();
@@ -25,7 +24,8 @@ async function pickActivityAndTime(page: Page) {
 test("Nilou accepts on the first attempt and sees Majid's number", async ({
   page,
 }) => {
-  await startAndAccept(page);
+  await start(page);
+  await page.getByTestId("answer-yes").click();
   await pickActivityAndTime(page);
 
   // Skip the optional phone step
@@ -41,37 +41,39 @@ test("Nilou accepts on the first attempt and sees Majid's number", async ({
 });
 
 test("Nilou clicks No a few times then accepts", async ({ page }) => {
-  await page.goto(`/invite/${SLUG}`);
-  await page.getByRole("button", { name: "شروع کنیم" }).click();
+  await start(page);
 
-  await page.getByRole("button", { name: /فعلاً نه/ }).click();
-  await page.getByRole("button", { name: /مطمئنی/ }).click();
-  await page.getByRole("button", { name: /قهوه کوچولو/ }).click();
-  // Now say yes (Yes button is the prominent first button)
-  await page.locator("button").first().click();
+  await page.getByTestId("answer-no").click();
+  await page.getByTestId("answer-no").click();
+  await page.getByTestId("answer-no").click();
+  await page.getByTestId("answer-yes").click();
 
-  await expect(page.getByRole("heading", { name: /چه مدل برنامه‌ای/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /چه مدل برنامه‌ای/ }),
+  ).toBeVisible();
 });
 
 test("Nilou gives a definitive, respectful decline", async ({ page }) => {
-  await page.goto(`/invite/${SLUG}`);
-  await page.getByRole("button", { name: "شروع کنیم" }).click();
+  await start(page);
 
-  await page.getByRole("button", { name: /فعلاً نه/ }).click();
-  await page.getByRole("button", { name: /مطمئنی/ }).click();
-  await page.getByRole("button", { name: "جدی می‌گم، فعلاً نمی‌خوام" }).click();
+  await page.getByTestId("answer-no").click();
+  await page.getByTestId("answer-no").click();
+  await page.getByTestId("answer-decline").click();
 
-  await expect(page.getByRole("heading", { name: /کاملاً قابل احترامه/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /کاملاً قابل احترامه/ }),
+  ).toBeVisible();
   // The owner's number must NOT appear after a decline.
   await expect(page.getByText(OWNER_DISPLAY)).toHaveCount(0);
 });
 
 test("Nilou accepts with a valid phone number and consent", async ({ page }) => {
-  await startAndAccept(page);
+  await start(page);
+  await page.getByTestId("answer-yes").click();
   await pickActivityAndTime(page);
 
   await page.getByLabel("شماره موبایل").fill("09121112233");
-  await page.getByText("موافقم شماره‌م").click();
+  await page.getByRole("checkbox").click();
   await page.getByRole("button", { name: "ادامه" }).click();
 
   // Review shows a masked number, not the full one

@@ -60,6 +60,7 @@ export function AnimatedAnswerButtons({
       >
         <motion.button
           type="button"
+          data-testid="answer-yes"
           layout={!reduce}
           disabled={disabled}
           onClick={() => onYes(noClicks)}
@@ -83,6 +84,7 @@ export function AnimatedAnswerButtons({
       {/* No — never moves away, never hidden, always clickable */}
       <button
         type="button"
+        data-testid="answer-no"
         disabled={disabled}
         onClick={handleNo}
         className={cn(
@@ -99,6 +101,7 @@ export function AnimatedAnswerButtons({
         {showDefinitive ? (
           <button
             type="button"
+            data-testid="answer-decline"
             disabled={disabled}
             onClick={() => onDecline(noClicks)}
             className={cn(

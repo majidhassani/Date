@@ -26,7 +26,8 @@ export function ThemeToggle() {
     setTheme(next);
   }
 
-  // Avoid hydration mismatch: render a stable placeholder until mounted.
+  // Until mounted, render values that match the server (theme is unknown on the
+  // server) to avoid a hydration mismatch. After mount they reflect the theme.
   const Icon = !mounted
     ? Monitor
     : current === "light"
@@ -34,6 +35,7 @@ export function ThemeToggle() {
       : current === "dark"
         ? Moon
         : Monitor;
+  const activeLabel = mounted ? LABEL[current] : LABEL.system;
 
   return (
     <>
@@ -41,13 +43,13 @@ export function ThemeToggle() {
         variant="outline"
         size="icon"
         onClick={cycle}
-        aria-label={`تغییر پوسته؛ حالت فعلی: ${LABEL[current]}`}
-        title={`پوسته: ${LABEL[current]}`}
+        aria-label={`تغییر پوسته؛ حالت فعلی: ${activeLabel}`}
+        title={`پوسته: ${activeLabel}`}
       >
         <Icon className="h-5 w-5" />
       </Button>
       <span aria-live="polite" className="sr-only">
-        {mounted ? `پوسته: ${LABEL[current]}` : ""}
+        {mounted ? `پوسته: ${activeLabel}` : ""}
       </span>
     </>
   );

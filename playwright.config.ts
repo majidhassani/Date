@@ -13,6 +13,10 @@ export default defineConfig({
     baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     trace: "on-first-retry",
     locale: "fa-IR",
+    // Disables looping animations (e.g. the pulsing Yes button) so elements are
+    // "stable" for actionability, and makes step transitions instant. Also
+    // exercises the reduced-motion code paths.
+    reducedMotion: "reduce",
   },
   projects: [
     // Uses the system Google Chrome via the "chrome" channel so no Playwright
