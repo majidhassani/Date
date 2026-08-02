@@ -16,19 +16,21 @@ FROM base AS deps
 COPY package.json package-lock.json* ./
 # The Prisma schema must exist because `postinstall` runs `prisma generate`.
 COPY prisma ./prisma
-# Prefer a reproducible install; fall back to `npm install` if the lock drifts.
+# Prefer a reproducible install; fall back to `npm install` if the lock drifts
+# or an older npm on the host chokes on optional deps.
 RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 # ---- Builder ----
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Ensure /app/public exists even if the repo has no public/ dir, so the
-# runner's COPY of it never fails.
+# Ensure /app/public exists even if the repo has no public/ dir.
 RUN mkdir -p public
 # Env validation is deferred to runtime; the build needs no real secrets/DB.
 ENV SKIP_ENV_VALIDATION=1
 RUN npm run build
+# Drop dev-only deps but KEEP runtime + Prisma CLI (prisma is a prod dependency).
+RUN npm prune --omit=dev
 
 # ---- Runner ----
 FROM base AS runner
@@ -39,19 +41,13 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-# Next.js standalone server + static assets
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Prisma schema + migrations + CLI/engines so migrations & seed run at startup.
-# Note: we do NOT copy node_modules/.bin/prisma (a symlink whose sibling *.wasm
-# files would be lost); the entrypoint calls node_modules/prisma/build/index.js.
+# Full production node_modules (includes next + prisma CLI + all deps/engines).
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
