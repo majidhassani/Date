@@ -27,6 +27,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Pass the whole .env into the container so any variable (e.g.
+    # AUTH_COOKIE_INSECURE) reaches the app. The `environment:` block below still
+    # overrides DATABASE_URL to the internal db service.
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-nilou}:${POSTGRES_PASSWORD:-nilou}@db:5432/${POSTGRES_DB:-nilou}?schema=public
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
