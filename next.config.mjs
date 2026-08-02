@@ -18,7 +18,9 @@ const cspDirectives = [
   "form-action 'self'",
   "object-src 'none'",
   "manifest-src 'self'",
-  "upgrade-insecure-requests",
+  // NOTE: no `upgrade-insecure-requests` — it would force asset requests to
+  // HTTPS, which breaks a plain-HTTP (no-TLS) deployment. Add it back once the
+  // app is served over HTTPS behind a reverse proxy.
 ].join("; ");
 
 const securityHeaders = [
