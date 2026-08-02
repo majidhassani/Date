@@ -13,9 +13,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # Exposed for local inspection; remove in production if not needed.
-    ports:
-      - "5432:5432"
+    # DB is reached only over the internal Docker network (no host port) to
+    # avoid clashing with a host PostgreSQL on 5432 and to keep it private.
+    # To inspect: `docker compose exec db psql -U nilou -d nilou`
+    expose:
+      - "5432"
 
   app:
     build:
