@@ -41,7 +41,6 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
-  output: "standalone",
   poweredByHeader: false,
   experimental: {
     // Server Actions body size guard for public submission endpoint.
