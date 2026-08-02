@@ -33,10 +33,9 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-  },
+  // NOTE: Strict-Transport-Security (HSTS) is intentionally omitted for a
+  // plain-HTTP deployment. Re-enable it once the app is served over HTTPS:
+  //   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }
   // The entire app is private — never allow indexing.
   { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
 ];
