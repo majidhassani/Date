@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { PublicInvitationConfig } from "@/lib/invitation-config";
 import type { OwnerContact } from "@/lib/types";
 import { APP_URL } from "@/lib/env";
+import { safeRandomId } from "@/lib/utils";
 import {
   submitAcceptance,
   submitDecline,
@@ -73,13 +74,18 @@ export function InvitationExperience({
 
   // Stable idempotency key per browser/slug — protects against double submits.
   const [idempotencyKey] = React.useState<string>(() => {
-    if (typeof window === "undefined") return crypto.randomUUID();
-    const storageKey = `nilou:idemp:${slug}`;
-    const existing = window.localStorage.getItem(storageKey);
-    if (existing) return existing;
-    const value = crypto.randomUUID();
-    window.localStorage.setItem(storageKey, value);
-    return value;
+    if (typeof window === "undefined") return safeRandomId();
+    try {
+      const storageKey = `nilou:idemp:${slug}`;
+      const existing = window.localStorage.getItem(storageKey);
+      if (existing) return existing;
+      const value = safeRandomId();
+      window.localStorage.setItem(storageKey, value);
+      return value;
+    } catch {
+      // localStorage can be unavailable (private mode); still return an id.
+      return safeRandomId();
+    }
   });
 
   // Focus the step heading after each transition (skip the very first render).

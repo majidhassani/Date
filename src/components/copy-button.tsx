@@ -4,7 +4,7 @@ import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button, type ButtonProps } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, copyText } from "@/lib/utils";
 
 type CopyButtonProps = Omit<ButtonProps, "onClick"> & {
   value: string;
@@ -25,12 +25,12 @@ export function CopyButton({
   const [copied, setCopied] = React.useState(false);
 
   async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(value);
+    const ok = await copyText(value);
+    if (ok) {
       setCopied(true);
       toast.success(toastMessage);
       window.setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       toast.error("کپی نشد. لطفاً دستی کپی کن.");
     }
   }
