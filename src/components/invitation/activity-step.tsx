@@ -56,13 +56,17 @@ export function ActivityStep({
       <fieldset className="grid gap-3 sm:grid-cols-2">
         <legend className="sr-only">انتخاب مدل برنامه</legend>
         {activities.map((a) => (
-          <label key={a.id} className="block cursor-pointer">
+          <label
+            key={a.id}
+            data-testid={`activity-label-${a.id}`}
+            onClick={() => onChange({ activityType: a.id })}
+            className="block cursor-pointer"
+          >
             <input
               type="radio"
               name="activity"
               value={a.id}
               aria-label={a.title}
-              data-testid={`activity-${a.id}`}
               checked={activityType === a.id}
               onChange={() => onChange({ activityType: a.id })}
               className="peer sr-only"

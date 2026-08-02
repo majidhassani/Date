@@ -13,18 +13,19 @@ export default defineConfig({
     baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     trace: "on-first-retry",
     locale: "fa-IR",
-    // Disables looping animations (e.g. the pulsing Yes button) so elements are
-    // "stable" for actionability, and makes step transitions instant. Also
-    // exercises the reduced-motion code paths.
-    reducedMotion: "reduce",
+    // Emulates prefers-reduced-motion so CSS transitions collapse and the
+    // reduced-motion code paths are exercised during e2e.
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
-    // Uses the system Google Chrome via the "chrome" channel so no Playwright
-    // browser download is required. In CI, install Playwright's own chromium
-    // and remove the `channel` override.
+    // Locally, use the system Google Chrome via the "chrome" channel so no
+    // Playwright browser download is needed. In CI, use the installed chromium.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(process.env.CI ? {} : { channel: "chrome" }),
+      },
     },
   ],
   webServer: {

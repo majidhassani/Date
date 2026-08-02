@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Build-safe placeholders; no real secrets are needed to lint/typecheck/build.
+  SKIP_ENV_VALIDATION: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  quality:
+    name: Lint, typecheck & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm run test
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nilou
+          POSTGRES_PASSWORD: nilou
+          POSTGRES_DB: nilou
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nilou"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://nilou:nilou@localhost:5432/nilou?schema=public
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      SESSION_SECRET: ci-session-secret-that-is-long-enough-1234567890
+      # Throwaway CI-only 32-byte base64 key (never used in production).
+      PHONE_ENCRYPTION_KEY: l686tv7gUu1BUeu9npHTltZdrswzLuVKxSZm/APHm8M=
+      ADMIN_EMAIL: admin@example.com
+      # bcrypt hash of "Nilou-Admin-2026!"
+      ADMIN_PASSWORD_HASH: $2a$12$YbjGZrtZ/gQLrvg8iMAO8OJGPg.vmTcLEWH1FZF14lKBfM7HORILW
+      OWNER_PHONE_LOCAL: "09129284402"
+      OWNER_PHONE_E164: "+989129284402"
+      NODE_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Prisma generate & migrate
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run e2e
+        run: npm run test:e2e
+
+  docker:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t daavat-nilou:ci .

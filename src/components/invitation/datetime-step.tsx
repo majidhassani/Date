@@ -118,12 +118,19 @@ export function DateTimeStep({
           <p className="text-xs text-muted-foreground">دم‌دستی‌ها</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {dateOptions.quick.map((opt, i) => (
-              <label key={opt.localDate} className="block cursor-pointer">
+              <label
+                key={opt.localDate}
+                data-testid={`date-label-quick-${i}`}
+                onClick={() => {
+                  setSelectedDate(opt.localDate);
+                  setShowPicker(false);
+                }}
+                className="block cursor-pointer"
+              >
                 <input
                   type="radio"
                   name="date"
                   aria-label={`${opt.tag}، ${opt.info.jalaliWithWeekday}`}
-                  data-testid={`date-quick-${i}`}
                   checked={selectedDate === opt.localDate}
                   onChange={() => {
                     setSelectedDate(opt.localDate);
@@ -143,12 +150,19 @@ export function DateTimeStep({
               <p className="pt-1 text-xs text-muted-foreground">آخر هفته‌ی نزدیک</p>
               <div className="grid gap-2 sm:grid-cols-3">
                 {dateOptions.weekdays.map((opt, i) => (
-                  <label key={opt.localDate} className="block cursor-pointer">
+                  <label
+                    key={opt.localDate}
+                    data-testid={`date-label-weekday-${i}`}
+                    onClick={() => {
+                      setSelectedDate(opt.localDate);
+                      setShowPicker(false);
+                    }}
+                    className="block cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="date"
                       aria-label={`${opt.tag}، ${opt.info.jalaliWithWeekday}`}
-                      data-testid={`date-weekday-${i}`}
                       checked={selectedDate === opt.localDate}
                       onChange={() => {
                         setSelectedDate(opt.localDate);

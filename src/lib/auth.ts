@@ -19,6 +19,18 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(env.SESSION_SECRET);
 }
 
+// Resolve the admin bcrypt hash: use ADMIN_PASSWORD_HASH if given, otherwise
+// derive one once from the plaintext ADMIN_PASSWORD (cached in memory).
+let derivedHash: string | null = null;
+async function getAdminHash(): Promise<string | null> {
+  if (env.ADMIN_PASSWORD_HASH) return env.ADMIN_PASSWORD_HASH;
+  if (env.ADMIN_PASSWORD) {
+    if (!derivedHash) derivedHash = await bcrypt.hash(env.ADMIN_PASSWORD, 12);
+    return derivedHash;
+  }
+  return null;
+}
+
 /** Verify admin email + password in near-constant time. */
 export async function verifyAdminCredentials(
   email: string,
@@ -28,10 +40,11 @@ export async function verifyAdminCredentials(
     Boolean(env.ADMIN_EMAIL) &&
     email.trim().toLowerCase() === env.ADMIN_EMAIL.trim().toLowerCase();
 
-  const hash = env.ADMIN_PASSWORD_HASH || DUMMY_HASH;
-  const passOk = await bcrypt.compare(password, hash);
+  const configuredHash = await getAdminHash();
+  // Always run a compare to keep timing uniform even when unconfigured.
+  const passOk = await bcrypt.compare(password, configuredHash || DUMMY_HASH);
 
-  return emailOk && Boolean(env.ADMIN_PASSWORD_HASH) && passOk;
+  return emailOk && Boolean(configuredHash) && passOk;
 }
 
 export async function createAdminSession(email: string): Promise<void> {

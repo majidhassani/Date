@@ -49,7 +49,7 @@ export function rateLimit(
 
 /** Named presets used across the app. */
 export const RATE_LIMITS = {
-  submit: { limit: 6, windowMs: 60_000 }, // 6 submissions / minute / key
+  submit: { limit: 15, windowMs: 60_000 }, // 15 submissions / minute / key
   noClick: { limit: 40, windowMs: 60_000 },
   adminLogin: { limit: 8, windowMs: 5 * 60_000 }, // 8 tries / 5 minutes
   phoneReveal: { limit: 30, windowMs: 60_000 },

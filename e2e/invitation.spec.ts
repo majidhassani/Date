@@ -10,12 +10,12 @@ async function start(page: Page) {
 }
 
 async function pickActivityAndTime(page: Page) {
-  // Activity — check the accessible radio directly (deterministic)
-  await page.getByTestId("activity-WALK_AND_COFFEE").check({ force: true });
+  // Activity — click the card label (deterministic onClick handler)
+  await page.getByTestId("activity-label-WALK_AND_COFFEE").click();
   await page.getByRole("button", { name: "ادامه" }).click();
 
   // Date + time
-  await page.getByTestId("date-quick-0").check({ force: true });
+  await page.getByTestId("date-label-quick-0").click();
   await page.getByRole("button", { name: "۱۸:۰۰" }).click();
   await page.getByRole("button", { name: "افزودن به انتخاب‌ها" }).click();
   await page.getByRole("button", { name: "ادامه" }).click();
@@ -91,6 +91,10 @@ test("welcome screen has no serious accessibility violations", async ({
   await expect(page.getByRole("button", { name: "شروع کنیم" })).toBeVisible();
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa"])
+    // The Next.js dev-mode error/route overlay is not part of the app and does
+    // not exist in production builds.
+    .exclude("#nextjs-portal")
+    .exclude("nextjs-portal")
     .analyze();
   const serious = results.violations.filter(
     (v) => v.impact === "serious" || v.impact === "critical",

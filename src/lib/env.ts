@@ -23,7 +23,10 @@ const EnvSchema = z.object({
   OWNER_PHONE_E164: z.string().default("+989129284402"),
 
   ADMIN_EMAIL: z.string().default(""),
+  // Provide EITHER a pre-computed bcrypt hash (preferred for production) …
   ADMIN_PASSWORD_HASH: z.string().default(""),
+  // … OR a plaintext password (hashed in-memory at startup — easiest self-host).
+  ADMIN_PASSWORD: z.string().default(""),
   SESSION_SECRET: z.string().default(""),
 
   PHONE_ENCRYPTION_KEY: z.string().default(""),
@@ -79,8 +82,10 @@ export function assertServerEnv(): void {
   if (!env.DATABASE_URL) problems.push("DATABASE_URL is required.");
   if (env.SESSION_SECRET.length < 32)
     problems.push("SESSION_SECRET must be at least 32 characters.");
-  if (!env.ADMIN_PASSWORD_HASH)
-    problems.push("ADMIN_PASSWORD_HASH is required for admin login.");
+  if (!env.ADMIN_PASSWORD_HASH && !env.ADMIN_PASSWORD)
+    problems.push(
+      "Set ADMIN_PASSWORD_HASH (preferred) or ADMIN_PASSWORD for admin login.",
+    );
 
   // PHONE_ENCRYPTION_KEY must decode to exactly 32 bytes when present.
   if (env.PHONE_ENCRYPTION_KEY) {
