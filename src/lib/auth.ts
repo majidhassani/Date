@@ -55,10 +55,16 @@ export async function createAdminSession(email: string): Promise<void> {
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
     .sign(getSecret());
 
+  // Secure cookies by default in production, unless explicitly allowed over
+  // plain HTTP (AUTH_COOKIE_INSECURE) for a no-TLS deployment.
+  const allowInsecure =
+    env.AUTH_COOKIE_INSECURE === "1" ||
+    env.AUTH_COOKIE_INSECURE.toLowerCase() === "true";
+
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProd,
+    secure: isProd && !allowInsecure,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_TTL_SECONDS,

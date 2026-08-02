@@ -31,6 +31,10 @@ const EnvSchema = z.object({
 
   PHONE_ENCRYPTION_KEY: z.string().default(""),
 
+  // Set to "1"/"true" to allow the admin session cookie over plain HTTP
+  // (needed when deploying without HTTPS). Leave empty for secure cookies.
+  AUTH_COOKIE_INSECURE: z.string().default(""),
+
   TELEGRAM_BOT_TOKEN: z.string().default(""),
   TELEGRAM_CHAT_ID: z.string().default(""),
 
